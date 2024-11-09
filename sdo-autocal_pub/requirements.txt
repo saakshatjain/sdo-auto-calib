@@ -99,7 +99,7 @@ python-dateutil==2.8.0
 pytz==2019.1
 PyWavelets==1.0.3
 PyYAML==6.0
-pyzmq==18.0.0
+pyzmq==25.0.0
 requests==2.22.0
 scipy==1.1.0
 seaborn==0.9.0
