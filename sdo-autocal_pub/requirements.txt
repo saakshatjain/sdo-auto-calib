@@ -1,4 +1,4 @@
-absl-py==0.7.1
+absl-py==1.0.0
 appdirs==1.4.3
 asn1crypto==0.24.0
 astor==0.7.1
