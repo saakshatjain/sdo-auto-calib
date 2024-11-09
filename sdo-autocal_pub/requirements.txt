@@ -72,7 +72,7 @@ numba==0.43.1
 numpy==1.14.5
 olefile==0.46
 onnx==1.5.0
-pandas==0.24.2
+pandas==1.0.0
 pandocfilters==1.4.2
 parso==0.5.0
 patsy==0.5.1
