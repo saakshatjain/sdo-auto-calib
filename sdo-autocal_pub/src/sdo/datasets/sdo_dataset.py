@@ -15,6 +15,7 @@ from sdo.ds_utility import minmax_normalization
 _logger = logging.getLogger(__name__)
 
 
+
 class SDO_Dataset(Dataset):
     """ Custom Dataset class compatible with torch.utils.data.DataLoader.
     It can be used to flexibly load a train or test dataset from the SDO local folder,
@@ -67,14 +68,14 @@ class SDO_Dataset(Dataset):
                              If > 1 the image is downsampled. i.e. if resolution=512 and
                              subsample=4, the images will be 128*128
             normalization (int): if 0 normalization is not applied, if > 0 a normalization
-                                 by image is applied (only one type of normalization implemented
+                                 by image is applied (only one type of normalization is implemented
                                  for now)
             scaling (bool): if True pixel values are scaled by the expected max value in active regions
                             (see sdo.io.sdo_scale)
             holdout (bool): if True use the holdout as test set. test_ratio is ignored in this case.
             apodize (bool): if True it masks the Sun’s limb. Remove anything farther than 1 solar radii from the center.
             mm_files (bool): if True it loads memory maps format data. If False it loads npz format data. SDOML available
-            online is usually in npz format.
+                             online is usually in npz format.
         """
         assert day_step > 0 and h_step > 0 and min_step > 0
 
