@@ -34,35 +34,6 @@ def to_numpy(value):
             raise TypeError('Cannot convert to Numpy array.')
 
 
-def init_gpu(cuda_device=None):
-    """ Use the GPU. """
-    torch.backends.cudnn.enabled = True
-    if not torch.cuda.is_available():
-        raise RuntimeError("CUDA not available! Unable to continue")
-
-    if cuda_device is None:
-        # Randomly keep trying available GPU devices.
-        devices = np.random.permutation(list(range(torch.cuda.device_count())))
-        success = False
-        for cuda_device in devices:
-            _logger.info('Trying to use CUDA device {}...'.format(cuda_device))
-            try:
-                device_str = "cuda:{}".format(cuda_device)
-                torch.cuda.set_device(device_str)
-                device = torch.device(device_str)
-                success = True
-                break
-            except Exception as error:
-                _logger.exception(error)
-            if not success:
-                raise Exception("No CUDA device is available!")
-    else:
-        device = torch.device("cuda:{}".format(cuda_device))
-
-    _logger.info("Using device {} for training, current device: {}, total devices: {}".format(
-        device, torch.cuda.current_device(), torch.cuda.device_count()))
-    return device
-
 
 def set_seed(random_seed=1, deterministic_cuda=True):
     """
