@@ -1,6 +1,3 @@
-"""
-In this module we define a pytorch SDO dataset
-"""
 import logging
 from os import path
 import random
@@ -13,7 +10,6 @@ from sdo.pytorch_utilities import to_tensor
 from sdo.ds_utility import minmax_normalization
 
 _logger = logging.getLogger(__name__)
-
 
 class SDO_Dataset(Dataset):
     """Custom Dataset class compatible with torch.utils.data.DataLoader.
@@ -103,7 +99,7 @@ class SDO_Dataset(Dataset):
             self.data_inventory = data_inventory
         else:
             _logger.warning(
-                "A valid inventory file has NOT be passed"
+                "A valid inventory file has NOT been passed"
                 "If this is not expected check the path."
             )
             self.data_inventory = False
@@ -209,36 +205,14 @@ class SDO_Dataset(Dataset):
                                     channels=self.channels,
                                 )
                                 n_sel_timestamps += n_sel_timestamps
-                            if result != -1:
-                                files.append(result)
-                                timestamp = (y, month, d, h, minu)
-                                timestamps.append(timestamp)
-                            else:
-                                discarded_tm += 1
-        if len(files) == 0:
-            _logger.error("No input images found")
-        else:
-            _logger.info(
-                "N timestamps discarded because channel is missing = %d (%.5f)"
-                % (discarded_tm, float(discarded_tm) / n_sel_timestamps)
-            )
-            _logger.info("Selected timestamps = %d" % len(files))
-            _logger.info("N images = %d" % (len(files) * len(self.channels)))
-            if self.shuffle:
-                _logger.warning(
-                    "Shuffling is being applied, this will alter the time sequence."
-                )
-                indices = np.arange(len(files))
-                random.shuffle(indices)
-                tmp_files = []
-                tmp_timestamps = []
-                for i in indices:
-                    tmp_files.append(files[i])
-                    tmp_timestamps.append(timestamps[i])
-                files = tmp_files
-                timestamps = tmp_timestamps
+                                if result != -1:
+                                    files.append(result)
+                                    timestamp = (y, month, d, h, minu)
+                                    timestamps.append(timestamp)
+                                else:
+                                    discarded_tm += 1
+        _logger.info(f"{discarded_tm} timestamps discarded")
         return files, timestamps
-
     def normalize_by_img(self, img, norm_type):
         if norm_type == 1:
             return minmax_normalization(img)
