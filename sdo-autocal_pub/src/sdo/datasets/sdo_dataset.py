@@ -124,18 +124,14 @@ class SDO_Dataset(Dataset):
             months = [11, 12]
         return months
 
-    def create_list_files(self):
+   def create_list_files(self):
         """
-        Find path to files that correspond to the requested timestamps. A timestamp
-        is returned only if the files from ALL the requested channels are found.
-
-        Returns: list of lists of strings, list of tuples. The first argument are the 
-             path to the files, each row is a timestamp. The second argument are the
-             correspondant timestamps.
-
+        Find path to files that correspond to the requested timestamps.
+        Returns: list of lists of strings (file paths), list of tuples (timestamps).
         """
         _logger.info('Loading SDOML from "%s"' % self.data_basedir)
         _logger.info('Loading SDOML inventory file from "%s"' % self.data_inventory)
+
         indexes = ['year', 'month', 'day', 'hour', 'min']
         yrs = np.arange(self.yr_range[0], self.yr_range[1] + 1)
         months = self.find_months()
@@ -143,16 +139,11 @@ class SDO_Dataset(Dataset):
         hours = np.arange(0, 24, self.h_step)
         minus = np.arange(0, 60, self.min_step)
         tot_timestamps = np.prod([len(x) for x in [yrs, months, days, hours, minus]])
-        _logger.debug("Timestamps requested values: ")
-        _logger.debug("Years: %s" % ','.join('{}'.format(i) for i in (yrs)))
-        _logger.debug("Months: %s" % ','.join('{}'.format(i) for i in (months)))
-        _logger.debug("Days: %s" % ','.join('{}'.format(i) for i in (days)))
-        _logger.debug("Hours: %s" % ','.join('{}'.format(i) for i in (hours)))
-        _logger.debug("Minutes: %s" % ','.join('{}'.format(i) for i in (minus)))
-        _logger.info("Max number of timestamps: %d" % tot_timestamps)
 
         if self.data_inventory:
             df = pd.read_pickle(self.data_inventory)
+
+            # Apply filters for channels, years, months, days, hours, and minutes
             cond0 = df['channel'].isin(self.channels)
             cond1 = df['year'].isin(yrs)
             cond2 = df['month'].isin(months)
@@ -160,21 +151,30 @@ class SDO_Dataset(Dataset):
             cond4 = df['hour'].isin(hours)
             cond5 = df['min'].isin(minus)
 
+            # Print counts for each condition
+            print(f"Files satisfying cond0 (channel): {df[cond0].shape[0]}")
+            print(f"Files satisfying cond1 (year): {df[cond1].shape[0]}")
+            print(f"Files satisfying cond2 (month): {df[cond2].shape[0]}")
+            print(f"Files satisfying cond3 (day): {df[cond3].shape[0]}")
+            print(f"Files satisfying cond4 (hour): {df[cond4].shape[0]}")
+            print(f"Files satisfying cond5 (minute): {df[cond5].shape[0]}")
+
+            # Combine conditions
             sel_df = df[cond0 & cond1 & cond2 & cond3 & cond4 & cond5]
             n_sel_timestamps = sel_df.groupby(indexes).head(1).shape[0]
-            _logger.info("Timestamps found in the inventory: %d (%.2f)" %
-                         (n_sel_timestamps, float(n_sel_timestamps) / tot_timestamps))
-            grouped_df = sel_df.groupby(indexes).size()
-            # we select only timestamp that have files for all the channels
-            grouped_df = grouped_df[grouped_df == len(self.channels)].to_frame()
-            sel_df = sel_df.reset_index().drop('index', axis=1)
-            sel_df = pd.merge(grouped_df, sel_df, how='inner',
-                              left_on=indexes, right_on=indexes)
-            # sorting is essential, the order of the channels must be consistent
-            s_files = sel_df.sort_values('channel').groupby(indexes)['file_name'].apply(list)
+            _logger.info(f"Timestamps found in the inventory: {n_sel_timestamps} ({float(n_sel_timestamps) / tot_timestamps:.2f})")
 
+            # Further processing: group by indexes, handle file paths, etc.
+            grouped_df = sel_df.groupby(indexes).size()
+            grouped_df = grouped_df[grouped_df == len(self.channels)].to_frame()
+
+            sel_df = sel_df.reset_index().drop('index', axis=1)
+            sel_df = pd.merge(grouped_df, sel_df, how='inner', left_on=indexes, right_on=indexes)
+
+            s_files = sel_df.sort_values('channel').groupby(indexes)['file'].apply(list)
             files = s_files.values.tolist()
             timestamps = s_files.index.tolist()
+
             discarded_tm = n_sel_timestamps - len(timestamps)
         else:
             _logger.warning(
