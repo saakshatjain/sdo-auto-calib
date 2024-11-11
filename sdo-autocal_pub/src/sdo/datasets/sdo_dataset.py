@@ -15,12 +15,11 @@ from sdo.ds_utility import minmax_normalization
 _logger = logging.getLogger(__name__)
 
 
-
 class SDO_Dataset(Dataset):
-    """ Custom Dataset class compatible with torch.utils.data.DataLoader.
+    """Custom Dataset class compatible with torch.utils.data.DataLoader.
     It can be used to flexibly load a train or test dataset from the SDO local folder,
     asking for a specific range of years and a specific frequency in months, days, hours,
-    minutes. Scaling is applied by default, normalization can be optionally applied. """
+    minutes. Scaling is applied by default, normalization can be optionally applied."""
 
     def __init__(
         self,
@@ -103,8 +102,10 @@ class SDO_Dataset(Dataset):
         if path.isfile(data_inventory):
             self.data_inventory = data_inventory
         else:
-            _logger.warning("A valid inventory file has NOT be passed"
-                            "If this is not expected check the path.")
+            _logger.warning(
+                "A valid inventory file has NOT be passed"
+                "If this is not expected check the path."
+            )
             self.data_inventory = False
         self.files, self.timestamps = self.create_list_files()
 
@@ -133,7 +134,7 @@ class SDO_Dataset(Dataset):
         _logger.info('Loading SDOML from "%s"' % self.data_basedir)
         _logger.info('Loading SDOML inventory file from "%s"' % self.data_inventory)
 
-        indexes = ['year', 'month', 'day', 'hour', 'min']
+        indexes = ["year", "month", "day", "hour", "min"]
         yrs = np.arange(self.yr_range[0], self.yr_range[1] + 1)
         months = self.find_months()
         days = np.arange(1, 32, self.day_step)
@@ -145,12 +146,12 @@ class SDO_Dataset(Dataset):
             df = pd.read_pickle(self.data_inventory)
 
             # Apply filters for channels, years, months, days, hours, and minutes
-            cond0 = df['channel'].isin(self.channels)
-            cond1 = df['year'].isin(yrs)
-            cond2 = df['month'].isin(months)
-            cond3 = df['day'].isin(days)
-            cond4 = df['hour'].isin(hours)
-            cond5 = df['min'].isin(minus)
+            cond0 = df["channel"].isin(self.channels)
+            cond1 = df["year"].isin(yrs)
+            cond2 = df["month"].isin(months)
+            cond3 = df["day"].isin(days)
+            cond4 = df["hour"].isin(hours)
+            cond5 = df["min"].isin(minus)
 
             # Print counts for each condition
             print(f"Files satisfying cond0 (channel): {df[cond0].shape[0]}")
@@ -163,23 +164,28 @@ class SDO_Dataset(Dataset):
             # Combine conditions
             sel_df = df[cond0 & cond1 & cond2 & cond3 & cond4 & cond5]
             n_sel_timestamps = sel_df.groupby(indexes).head(1).shape[0]
-            _logger.info(f"Timestamps found in the inventory: {n_sel_timestamps} ({float(n_sel_timestamps) / tot_timestamps:.2f})")
+            _logger.info(
+                f"Timestamps found in the inventory: {n_sel_timestamps} ({float(n_sel_timestamps) / tot_timestamps:.2f})"
+            )
 
             # Further processing: group by indexes, handle file paths, etc.
             grouped_df = sel_df.groupby(indexes).size()
             grouped_df = grouped_df[grouped_df == len(self.channels)].to_frame()
 
-            sel_df = sel_df.reset_index().drop('index', axis=1)
-            sel_df = pd.merge(grouped_df, sel_df, how='inner', left_on=indexes, right_on=indexes)
+            sel_df = sel_df.reset_index().drop("index", axis=1)
+            sel_df = pd.merge(
+                grouped_df, sel_df, how="inner", left_on=indexes, right_on=indexes
+            )
 
-            s_files = sel_df.sort_values('channel').groupby(indexes)['file'].apply(list)
+            s_files = sel_df.sort_values("channel").groupby(indexes)["file"].apply(list)
             files = s_files.values.tolist()
             timestamps = s_files.index.tolist()
 
             discarded_tm = n_sel_timestamps - len(timestamps)
         else:
             _logger.warning(
-                'A valid inventory file has not been passed in, be prepared to wait.')
+                "A valid inventory file has not been passed in, be prepared to wait."
+            )
             files = []
             timestamps = []
             n_sel_timestamps = 0
@@ -191,12 +197,17 @@ class SDO_Dataset(Dataset):
                             for minu in minus:
                                 # if a single channel is missing for the combination
                                 # of parameters result is -1
-                                result = sdo_find(y, month, d, h, minu,
-                                                  initial_size=self.resolution,
-                                                  basedir=self.data_basedir,
-                                                  instrs=self.instr,
-                                                  channels=self.channels,
-                                                  )
+                                result = sdo_find(
+                                    y,
+                                    month,
+                                    d,
+                                    h,
+                                    minu,
+                                    initial_size=self.resolution,
+                                    basedir=self.data_basedir,
+                                    instrs=self.instr,
+                                    channels=self.channels,
+                                )
                                 n_sel_timestamps += n_sel_timestamps
                             if result != -1:
                                 files.append(result)
@@ -207,13 +218,16 @@ class SDO_Dataset(Dataset):
         if len(files) == 0:
             _logger.error("No input images found")
         else:
-            _logger.info("N timestamps discarded because channel is missing = %d (%.5f)" %
-                         (discarded_tm, float(discarded_tm) / n_sel_timestamps))
+            _logger.info(
+                "N timestamps discarded because channel is missing = %d (%.5f)"
+                % (discarded_tm, float(discarded_tm) / n_sel_timestamps)
+            )
             _logger.info("Selected timestamps = %d" % len(files))
             _logger.info("N images = %d" % (len(files) * len(self.channels)))
             if self.shuffle:
                 _logger.warning(
-                    "Shuffling is being applied, this will alter the time sequence.")
+                    "Shuffling is being applied, this will alter the time sequence."
+                )
                 indices = np.arange(len(files))
                 random.shuffle(indices)
                 tmp_files = []
@@ -229,8 +243,10 @@ class SDO_Dataset(Dataset):
         if norm_type == 1:
             return minmax_normalization(img)
         else:
-            _logger.error("This type of normalization is not implemented."
-                          "Original image is returned")
+            _logger.error(
+                "This type of normalization is not implemented."
+                "Original image is returned"
+            )
             return img
 
     def __len__(self):
@@ -238,7 +254,7 @@ class SDO_Dataset(Dataset):
 
     def __getitem__(self, index):
         """
-        This function will return a single row of the dataset, where each image has 
+        This function will return a single row of the dataset, where each image has
         been scaled and normalized if requested in the class initialization.
         Args:
             index (int): dataset row index
@@ -254,11 +270,18 @@ class SDO_Dataset(Dataset):
 
         img = np.zeros(shape=(size, size), dtype=np.float32)
         for c in range(n_channels):
-            if self.mm_files: # Load the SDOML files depending on which extension used. mm_file = true will load memory maps.
-                temp = np.memmap(self.files[index][c], shape=(self.resolution, self.resolution), mode='r', dtype=np.float32)
+            if (
+                self.mm_files
+            ):  # Load the SDOML files depending on which extension used. mm_file = true will load memory maps.
+                temp = np.memmap(
+                    self.files[index][c],
+                    shape=(self.resolution, self.resolution),
+                    mode="r",
+                    dtype=np.float32,
+                )
             else:
-                temp = np.load(self.files[index][c], allow_pickle=True)['x']
-            img[:, :] = temp[::self.subsample, ::self.subsample]
+                temp = np.load(self.files[index][c], allow_pickle=True)["x"]
+            img[:, :] = temp[:: self.subsample, :: self.subsample]
             if self.scaling:
                 # divide by roughly the mean of the channel
                 img = sdo_scale(img, self.channels[c])
@@ -274,14 +297,15 @@ class SDO_Dataset(Dataset):
             ygrid = y.reshape((y.shape[0], 1)) @ np.ones(shape=(1, img.shape[0]))
             dist = np.sqrt(xgrid * xgrid + ygrid * ygrid)
             mask = np.ones(shape=dist.shape, dtype=np.float)
-            mask = np.where(dist < 200. / self.subsample, mask,
-                            0.0)  # Radius of sun at 1 AU is 200*4.8 arcsec
+            mask = np.where(
+                dist < 200.0 / self.subsample, mask, 0.0
+            )  # Radius of sun at 1 AU is 200*4.8 arcsec
             for c in range(len(self.channels)):
                 item[c, :, :] = item[c, :, :] * mask
 
         timestamps = self.timestamps[index]
         output = [to_tensor(item), to_tensor(timestamps)]
-   
+
         # Note: For efficiency reasons, don't send each item to the GPU;
         # rather, later, send the entire batch to the GPU.
         return output
