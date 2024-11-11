@@ -171,7 +171,8 @@ class SDO_Dataset(Dataset):
             sel_df = pd.merge(grouped_df, sel_df, how='inner',
                               left_on=indexes, right_on=indexes)
             # sorting is essential, the order of the channels must be consistent
-            s_files = sel_df.sort_values('channel').groupby(indexes)['file'].apply(list)
+            s_files = sel_df.sort_values('channel').groupby(indexes)['file_name'].apply(list)
+
             files = s_files.values.tolist()
             timestamps = s_files.index.tolist()
             discarded_tm = n_sel_timestamps - len(timestamps)
