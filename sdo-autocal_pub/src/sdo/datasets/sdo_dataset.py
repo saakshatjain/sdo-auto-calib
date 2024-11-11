@@ -211,7 +211,6 @@ class SDO_Dataset(Dataset):
                                     timestamps.append(timestamp)
                                 else:
                                     discarded_tm += 1
-        _logger.info(f"{discarded_tm} timestamps discarded")
         return files, timestamps
     def normalize_by_img(self, img, norm_type):
         if norm_type == 1:
