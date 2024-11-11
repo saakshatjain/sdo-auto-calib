@@ -124,7 +124,7 @@ class SDO_Dataset(Dataset):
             months = [11, 12]
         return months
 
-   def create_list_files(self):
+    def create_list_files(self):
         """
         Find path to files that correspond to the requested timestamps.
         Returns: list of lists of strings (file paths), list of tuples (timestamps).
