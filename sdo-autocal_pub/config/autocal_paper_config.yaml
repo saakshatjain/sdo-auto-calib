@@ -17,8 +17,9 @@ batch-size-test: 256
 batch-size-train: 64
 config: autocal_paper_config.yaml
 continue-training: false
-data-basedir: /fdl_sdo_data/SDOMLmm/fdl_sw/SDOMLmm/npz_files
-data-inventory: /fdl_sdo_data/bucket/inventory.pkl
+data-basedir: /kaggle/input/npz-files/2020
+data-inventory: /kaggle/input/your-dataset-folder/data_inventory.pkl
+
 dataloader-workers: 14
 day-step: 1
 deterministic-cuda: true
